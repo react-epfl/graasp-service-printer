@@ -1,0 +1,38 @@
+# exclude webstorm and idea files
+.idea
+
+# exclude sublime project files
+*.sublime-*
+
+# exclude macos files
+.DS_Store
+
+# exclude dist directories
+dist
+
+# production
+build/*
+!build/favicon.ico
+
+# exclude node_modules
+node_modules
+
+# exclude cypress
+cypress
+
+# exclude environment variables
+.env*
+
+# exclude keys
+*.aes
+
+# exclude coverage
+coverage
+.nyc_output
+
+# exclude temporary aws task definitions
+tasks
+
+# logs
+logs
+*.log
