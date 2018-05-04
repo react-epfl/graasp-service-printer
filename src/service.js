@@ -243,26 +243,28 @@ const scrape = async ({ url, format }) => {
       width: 1200,
       height: 1200,
     });
-    console.log(url); // todo
-    const status = await page.goto(
+
+    // method will throw on error
+    await page.goto(
       url,
       {
         waitUntil: 'networkidle0',
       },
     );
 
-    if (!status) {
-      await browser.close();
-      return false;
-    }
-
     // dismiss cookie banner
     const dismissCookiesMessageButton = 'a.cc-dismiss';
-    await page.waitForSelector(dismissCookiesMessageButton);
-    await page.click(dismissCookiesMessageButton);
 
-    // wait five more seconds just in case
-    await page.waitFor(5000);
+    // we do not want to error out just because of the cookie message
+    try {
+      await page.waitForSelector(dismissCookiesMessageButton, { timeout: 1000 });
+      await page.click(dismissCookiesMessageButton);
+    } catch (err) {
+      Logger.info(`error: ${err}`);
+    }
+
+    // wait three more seconds just in case
+    await page.waitFor(3000);
     const formattedPage = await formatSpace(page, format);
     await browser.close();
 
@@ -274,12 +276,19 @@ const scrape = async ({ url, format }) => {
   }
 };
 
-const convertSpaceToFile = async (id, query) => {
+const convertSpaceToFile = async (id, query, headers) => {
   Logger.debug('converting space to file');
-  // todo: re-use token for print request
-  // let token = req.headers.authorization;
-  // if (token && token.indexOf('Bearer ') === 0) token = token.substring(7);
-  // if (token) params.authorization = token;
+
+  // sign in automatically if needed
+  let token = headers.authorization;
+  if (token && token.indexOf('Bearer ') === 0) {
+    // just include the token string and not the bearer prefix
+    token = token.substring(7);
+  }
+  const params = query;
+  if (token) {
+    params.authorization = token;
+  }
 
   // build url from query parameters
   let url = `${GRAASP_HOST}/ils/${id}/?printPreview`;
@@ -293,7 +302,7 @@ const convertSpaceToFile = async (id, query) => {
   ];
 
   // build url from query parameters
-  _.each(query, (value, key) => {
+  _.each(params, (value, key) => {
     if (_.includes(validParams, key)) {
       url += `&${key}`;
       if (value) {

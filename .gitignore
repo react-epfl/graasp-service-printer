@@ -36,3 +36,6 @@ tasks
 # logs
 logs
 *.log
+
+# temporary files
+tmp

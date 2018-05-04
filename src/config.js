@@ -9,3 +9,5 @@ export const {
   LOGGING_LEVEL = 'info',
   TMP_PATH = 'tmp',
 } = process.env;
+
+export const SUPPORTED_FORMATS = ['pdf', 'png', 'epub'];
