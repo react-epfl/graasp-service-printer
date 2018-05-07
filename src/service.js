@@ -18,6 +18,7 @@ const generateEpub = async ({
   author = 'Anonymous',
   chapters = [],
   cover,
+  screenshots,
 }) => {
   Logger.debug('generating epub');
   // main options
@@ -50,9 +51,18 @@ const generateEpub = async ({
     stream.on('end', () => {
       const rvalue = Buffer.concat(epub);
       rimraf(output, (error) => {
+        Logger.debug(`info: deleting temporary epub ${output}`);
         if (error) {
           console.error(error);
         }
+      });
+      screenshots.forEach((path) => {
+        Logger.debug(`info: deleting temporary screenshot ${path}`);
+        rimraf(path, (error) => {
+          if (error) {
+            console.error(error);
+          }
+        });
       });
       resolve(rvalue);
     });
@@ -62,6 +72,7 @@ const generateEpub = async ({
 const screenshotElements = async (elements, page) => {
   Logger.debug('capturing screenshots of elements');
 
+  const paths = [];
   // using for-of-loop for readability when using await inside a loop
   // where await is needed due to requirement of sequential steps
   // check for discussion: http://bit.ly/2JcMMLk
@@ -78,8 +89,11 @@ const screenshotElements = async (elements, page) => {
       }, element, id);
     }
     // save screenshot with id as filename
-    await element.screenshot({ path: `${TMP_PATH}/${id}.png` });
+    const path = `${TMP_PATH}/${id}.png`;
+    await element.screenshot({ path });
+    paths.push(path);
   }
+  return paths;
 };
 
 const replaceElementsWithScreenshots = async (elements, page) => {
@@ -104,8 +118,6 @@ const replaceElementsWithScreenshots = async (elements, page) => {
   }
 };
 
-const isAbsoluteUrl = url => (url.startsWith('//') || url.startsWith('http'));
-
 // note: cannot use async/await syntax in this
 // function until the following issue is solved
 // http://bit.ly/2HIyUZQ
@@ -122,17 +134,17 @@ const getBackground = (el, host) => {
   return null;
 };
 
-// todo: change to function once issue below is solved
-// needs to be passed in as a string due to issue:
+// note: cannot use async/await syntax in this
+// function until the following issue is solved
 // http://bit.ly/2HIyUZQ
-const makeImageSourcesAbsolute = `(async (imgs, host) => {
-  for (const img of imgs) {
+const makeImageSourcesAbsolute = (imgs, host) => {
+  imgs.forEach((img) => {
     const imgSrc = img.getAttribute('src');
-    if (!await window.isAbsoluteUrl(imgSrc)) {
+    if (!(imgSrc.startsWith('//') || imgSrc.startsWith('http'))) {
       img.setAttribute('src', host + imgSrc);
     }
-  }
-})`;
+  });
+};
 
 const saveEpub = async (page) => {
   Logger.debug('saving epub');
@@ -176,7 +188,7 @@ const saveEpub = async (page) => {
 
   // replace gadgets
   const gadgets = await page.$$('div.gadget-content');
-  await screenshotElements(gadgets, page);
+  const gadgetScreenshots = await screenshotElements(gadgets, page);
   await replaceElementsWithScreenshots(gadgets, page);
 
   // remove panels accompanying gadgets
@@ -184,7 +196,7 @@ const saveEpub = async (page) => {
 
   // replace embedded html divs, including youtube videos
   const embeds = await page.$$('div.embedded-html');
-  await screenshotElements(embeds, page);
+  const embedScreenshots = await screenshotElements(embeds, page);
   await replaceElementsWithScreenshots(embeds, page);
 
   // get description if present and create introduction
@@ -206,8 +218,16 @@ const saveEpub = async (page) => {
   // concatenate introduction and body
   const chapters = [introduction, ...body];
 
+  const screenshots = [...gadgetScreenshots, ...embedScreenshots];
+
   // prepare epub
-  return generateEpub({ title, chapters, cover });
+  return generateEpub({
+    title,
+    author,
+    chapters,
+    cover,
+    screenshots,
+  });
 };
 
 const formatSpace = async (page, format) => {
@@ -243,9 +263,6 @@ const scrape = async ({ url, format }) => {
   });
   try {
     const page = await browser.newPage();
-
-    // expose helper functions
-    await page.exposeFunction('isAbsoluteUrl', isAbsoluteUrl);
 
     // todo: factor out viewport dims
     await page.setViewport({
