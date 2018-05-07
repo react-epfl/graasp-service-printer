@@ -15,7 +15,7 @@ const generateRandomString = () => Math.random().toString(36).slice(2);
 
 const generateEpub = async ({
   title = 'Untitled',
-  author = 'Anonymous', // todo: get from html
+  author = 'Anonymous',
   chapters = [],
   cover,
 }) => {
@@ -138,21 +138,30 @@ const saveEpub = async (page) => {
   Logger.debug('saving epub');
 
   // get title
-  const titleSelector = 'div.header-content > span.ils-name-header';
-  await page.waitForSelector(titleSelector);
-
   let title = 'Untitled';
   try {
+    const titleSelector = 'div.header-content > span.ils-name-header';
+    await page.waitForSelector(titleSelector, { timeout: 1000 });
     title = await page.$eval(titleSelector, el => el.innerHTML);
   } catch (titleErr) {
     console.error(titleErr);
+  }
+
+  // get author
+  let author = 'Anonymous';
+  try {
+    const authorSelector = 'meta[name=author]';
+    await page.waitForSelector(authorSelector, { timeout: 1000 });
+    author = await page.$eval(authorSelector, el => el.getAttribute('content'));
+  } catch (authorErr) {
+    console.error(authorErr);
   }
 
   // get background to use as cover
   let cover = null;
   try {
     cover = await page.$eval('div.background-holder', getBackground, BASE_URL);
-    console.log(typeof cover === 'string');
+
     if (!(cover instanceof String) && (typeof cover !== 'string')) {
       cover = null;
     }
