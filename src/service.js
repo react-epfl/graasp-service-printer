@@ -148,7 +148,6 @@ const makeImageSourcesAbsolute = (imgs, host) => {
 
 const saveEpub = async (page) => {
   Logger.debug('saving epub');
-
   // get title
   let title = 'Untitled';
   try {
@@ -173,7 +172,6 @@ const saveEpub = async (page) => {
   let cover = null;
   try {
     cover = await page.$eval('div.background-holder', getBackground, BASE_URL);
-
     if (!(cover instanceof String) && (typeof cover !== 'string')) {
       cover = null;
     }
@@ -219,7 +217,6 @@ const saveEpub = async (page) => {
   const chapters = [introduction, ...body];
 
   const screenshots = [...gadgetScreenshots, ...embedScreenshots];
-
   // prepare epub
   return generateEpub({
     title,
@@ -275,6 +272,8 @@ const scrape = async ({ url, format }) => {
       url,
       {
         waitUntil: 'networkidle0',
+        // one minute timeout
+        timeout: 60000,
       },
     );
 
@@ -302,7 +301,7 @@ const scrape = async ({ url, format }) => {
   }
 };
 
-const convertSpaceToFile = async (id, query, headers) => {
+const convertSpaceToFile = async (id, body, headers) => {
   Logger.debug('converting space to file');
 
   // sign in automatically if needed
@@ -311,7 +310,7 @@ const convertSpaceToFile = async (id, query, headers) => {
     // just include the token string and not the bearer prefix
     token = token.substring(7);
   }
-  const params = query;
+  const params = body;
   if (token) {
     params.authorization = token;
   }
@@ -338,10 +337,8 @@ const convertSpaceToFile = async (id, query, headers) => {
   });
 
   // return in pdf format by default
-  const { format = 'pdf' } = query;
-
+  const { format = 'pdf' } = body;
   const page = await scrape({ url, format });
-
   if (!page) {
     const prettyUrl = url.split('?')[0];
     throw Error(`space ${prettyUrl} could not be printed`);

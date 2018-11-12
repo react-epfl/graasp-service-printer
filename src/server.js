@@ -7,13 +7,8 @@ import Http from 'http';
 import Logger, { stream } from './utils/logger';
 import Router from './router';
 import {
-  NAME,
   PORT,
 } from './config';
-
-// note: load order matters
-// start bootstrap process
-Logger.info(`starting server: ${NAME}`);
 
 // create application server
 const app = Express();

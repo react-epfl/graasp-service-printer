@@ -41,7 +41,7 @@ RUN groupadd -r graasp && useradd -r -g graasp -G audio,video graasp \
 # run user as non privileged
 USER graasp
 
-EXPOSE 7000
+EXPOSE 9696
 
 ENTRYPOINT ["dumb-init", "--"]
 CMD ["yarn", "start"]
