@@ -1,5 +1,8 @@
 FROM node:8-slim
 
+# add git and bash
+RUN apt-get update && apt-get install -yq git bash
+
 # see https://crbug.com/795759
 RUN apt-get update && apt-get install -yq libgconf-2-4
 
@@ -44,4 +47,6 @@ USER graasp
 EXPOSE 9696
 
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["yarn", "start"]
+
+# todo remove ':prod'
+CMD ["yarn", "start:prod"]

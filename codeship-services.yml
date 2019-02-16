@@ -1,0 +1,58 @@
+# test
+
+run-test:
+  build: .
+  dockerfile: Dockerfile.run.test
+  encrypted_env_file: .env.test.encrypted
+  volumes:
+    - ./scripts:/usr/src/app/scripts
+
+# development
+
+app-dev:
+  build: .
+  dockerfile: Dockerfile
+  encrypted_env_file: .env.dev.encrypted
+  ports:
+    - "7000"
+  volumes:
+    - .:/deploy
+
+release-dev:
+  image: codeship/aws-ecr-dockercfg-generator
+  add_docker: true
+  encrypted_env_file: .env.dev.encrypted
+  environment:
+    - AWS_DEFAULT_REGION=us-east-1
+
+deploy-dev:
+  image: codeship/aws-deployment
+  encrypted_env_file: .env.dev.encrypted
+  environment:
+    - AWS_DEFAULT_REGION=us-east-1
+  volumes:
+    - .:/deploy
+
+# production
+
+build-prod:
+  build: .
+  dockerfile: Dockerfile
+  encrypted_env_file: .env.prod.encrypted
+  volumes:
+    - .:/deploy
+
+release-prod:
+  image: codeship/aws-ecr-dockercfg-generator
+  add_docker: true
+  encrypted_env_file: .env.prod.encrypted
+  environment:
+    - AWS_DEFAULT_REGION=us-east-1
+
+deploy-prod:
+  image: codeship/aws-deployment
+  encrypted_env_file: .env.prod.encrypted
+  environment:
+    - AWS_DEFAULT_REGION=us-east-1
+  volumes:
+    - .:/deploy

@@ -1,7 +1,11 @@
 import ObjectId from 'bson-objectid';
 import Aws from 'aws-sdk';
 import Logger from './utils/logger';
-import { convertSpaceToFile, fetchTag } from './service';
+import {
+  convertSpaceToFile,
+  fetchTag,
+  fetchCommit,
+} from './service';
 import {
   SUPPORTED_FORMATS,
   GRAASP_FILES_HOST,
@@ -20,7 +24,8 @@ const getVersion = (req, res, next) => {
   Logger.debug('getting version');
   try {
     const tag = fetchTag();
-    res.status(200).send(tag);
+    const commit = fetchCommit();
+    res.status(200).send({ tag, commit });
   } catch (err) {
     Logger.error(err);
     res.status(500).send(`${err.name}: ${err.message}.`);
@@ -36,14 +41,14 @@ const createPrint = async (id, body, headers, fileId) => {
       const params = { Bucket: S3_BUCKET, Key: fileId, Body: file };
       await s3.upload((params), (err, data) => {
         if (err) {
-          Logger.error(err);
+          Logger.error(`error uploading ${fileId}`, err);
         } else {
           Logger.info(data);
         }
       });
     }
   } catch (err) {
-    Logger.error(err);
+    Logger.error('error creating print', err);
   }
 };
 
@@ -70,8 +75,12 @@ const postPrint = async (req, res, next) => {
 
     // create print but do not wait for it
     createPrint(id, body, headers, fileId);
+
     // return 202 with location
-    return res.redirect(202, `${GRAASP_FILES_HOST}/queue/${fileId}`);
+    return res.status(202).json({
+      redirect: true,
+      location: `${GRAASP_FILES_HOST}/queue/${fileId}`,
+    });
   } catch (err) {
     Logger.error(err);
     res.status(500).send(`${err.name}: ${err.message}.`);

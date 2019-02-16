@@ -1,4 +1,3 @@
-
 const {
   PORT = 9696,
   GRAASP_HOST = 'https://graasp.eu',

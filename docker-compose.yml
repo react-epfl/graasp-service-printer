@@ -3,7 +3,7 @@ services:
   app:
     build: .
     env_file:
-      - ./.env.docker
+      - ./.env.local
     ports:
       - "9696:9696"
     volumes:

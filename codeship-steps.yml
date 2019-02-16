@@ -1,0 +1,55 @@
+# default
+# -------
+# always run the tests and lint the codebase
+- name: default
+  type: serial
+  steps:
+  - name: test
+    service: run-test
+    command: bash /usr/src/app/scripts/cover.sh
+
+# development
+# ----------
+# deploys to development environment when merging to develop branch
+#- type: serial
+#  tag: develop
+#  name: dev
+#  steps:
+#    - name: push-image-dev
+#      service: app-dev
+#      type: push
+#      image_name: 743256016950.dkr.ecr.us-east-1.amazonaws.com/graasp/printer
+#      image_tag: "{{.Branch}}"
+#      registry: https://743256016950.dkr.ecr.us-east-1.amazonaws.com
+#      dockercfg_service: release-dev
+#    - name: register-task-definition-dev
+#      service: deploy-dev
+#      command: /deploy/scripts/aws-deployment-dev.sh
+#    - name: update-service-dev
+#      service: deploy-dev
+#      command: aws ecs update-service --cluster graasp-printer-dev --service graasp-printer-dev-service --task-definition graasp-printer-dev
+
+# production
+# ----------
+# runs when pushing a version tag and requires manual approval before deploying to production
+- type: manual
+  # matches v<major>.<minor>.<patch>[-<meta>] version format
+  tag: ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z]*)?$
+  name: tag
+  steps:
+    - name: release
+      type: serial
+      steps:
+        - name: push-image-prod
+          service: build-prod
+          type: push
+          image_name: 743256016950.dkr.ecr.us-east-1.amazonaws.com/graasp/printer
+          image_tag: "{{.Branch}}"
+          registry: https://743256016950.dkr.ecr.us-east-1.amazonaws.com
+          dockercfg_service: release-prod
+        - name: register-task-definition-prod
+          service: deploy-prod
+          command: /deploy/scripts/aws-deployment-prod.sh
+        - name: update-service-prod
+          service: deploy-prod
+          command: aws ecs update-service --cluster graasp-printer-prod --service graasp-printer-prod-service --task-definition graasp-printer-prod
