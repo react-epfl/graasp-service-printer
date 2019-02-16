@@ -23,6 +23,9 @@ cypress
 # exclude environment variables
 .env*
 
+# include encrypted environment variables
+!.env*.encrypted
+
 # exclude keys
 *.aes
 

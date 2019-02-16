@@ -8,6 +8,7 @@ import { GRAASP_HOST, TMP_PATH } from './config';
 import Logger from './utils/logger';
 
 const fetchTag = () => Git.tag();
+const fetchCommit = () => Git.short();
 
 const BASE_URL = 'https://graasp.eu';
 
@@ -253,6 +254,7 @@ const formatSpace = async (page, format) => {
 };
 
 const scrape = async ({ url, format }) => {
+  Logger.debug('instantiating puppeteer');
   const browser = await Puppeteer.launch({
     // headless: false,
     // slowMo: 250,
@@ -267,7 +269,7 @@ const scrape = async ({ url, format }) => {
       height: 1200,
     });
 
-    // method will throw on error
+    Logger.debug('visiting page');
     await page.goto(
       url,
       {
@@ -281,11 +283,12 @@ const scrape = async ({ url, format }) => {
     const dismissCookiesMessageButton = 'a.cc-dismiss';
 
     // we do not want to error out just because of the cookie message
+    Logger.debug('dismissing cookie banner');
     try {
       await page.waitForSelector(dismissCookiesMessageButton, { timeout: 1000 });
       await page.click(dismissCookiesMessageButton);
     } catch (err) {
-      Logger.info(`error: ${err}`);
+      Logger.info('cookie message present', err);
     }
 
     // wait three more seconds just in case
@@ -295,7 +298,7 @@ const scrape = async ({ url, format }) => {
 
     return formattedPage;
   } catch (err) {
-    Logger.error(err);
+    Logger.error(`error scraping ${url}`, err);
     browser.close();
     return false;
   }
@@ -350,4 +353,5 @@ const convertSpaceToFile = async (id, body, headers) => {
 export {
   convertSpaceToFile,
   fetchTag,
+  fetchCommit,
 };
