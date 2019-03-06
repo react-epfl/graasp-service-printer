@@ -51,7 +51,6 @@
     "@babel/register": "7.0.0",
     "@commitlint/cli": "7.5.2",
     "@commitlint/config-conventional": "7.5.0",
-    "@commitlint/prompt-cli": "7.5.0",
     "eslint": "5.15.1",
     "eslint-config-airbnb": "17.1.0",
     "eslint-plugin-import": "2.16.0",
