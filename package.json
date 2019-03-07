@@ -13,12 +13,7 @@
     "start:prod": "env-cmd ./.env.prod nodemon src/server.js --exec babel-node",
     "lint": "eslint .",
     "test": "echo 'no tests yet :-('",
-    "release": "standard-version",
-    "commitmsg": "commitlint -e $GIT_PARAMS",
-    "commit": "commit",
-    "precommit": "yarn lint",
-    "prepush": "yarn lint",
-    "postcommit": "git status"
+    "release": "standard-version"
   },
   "license": "MIT",
   "private": true,
