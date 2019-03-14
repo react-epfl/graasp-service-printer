@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "start": "env-cmd ./.env.local nodemon src/server.js --exec babel-node",
+    "start:local": "env-cmd ./.env.local nodemon src/server.js --exec babel-node",
     "start:prod": "env-cmd ./.env.prod nodemon src/server.js --exec babel-node",
     "lint": "eslint .",
     "test": "echo 'no tests yet :-('",
