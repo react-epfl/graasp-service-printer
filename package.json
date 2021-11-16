@@ -19,7 +19,7 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
-    "aws-sdk": "2.415.0",
+    "aws-sdk": "2.814.0",
     "body-parser": "1.18.3",
     "bson-objectid": "1.2.4",
     "compression": "1.7.3",
